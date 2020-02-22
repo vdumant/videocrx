@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Video.js Text Descriptions, Chapters &amp; Captions Example</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link href="video-js.css" rel="stylesheet" type="text/css" />
+    <!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->
+    <script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js"></script>
+
+    <style>
+      .vjs-icon-chapters:before,
+      .video-js .vjs-chapters-button .vjs-icon-placeholder:before {
+        content: "\f107";
+        font-family: FontAwesome;
+        margin-top: -0.3em;
+      }
+      #btnAgregarMarcador {
+        margin-left: -1em;
+        margin-right: -0.9em;
+        width: 2em;
+        font-size: 1.5em;
+      }
+      #btnMostrarMarcadores {
+        width: 2em;
+        font-size: 1.5em;
+      }
+      .icon-bookmark:before {
+        content: "\f097";
+        font-family: FontAwesome;
+      }
+      .vjs-menu-button-popup .vjs-menu {
+        list-style: circle;
+        text-transform: uppercase;
+        width: 30em;
+        right: 0em;
+        left: auto;
+      }
+      .vjs-menu-item {
+        text-align: left;
+      }
+    </style>
+  </head>
+
+  <body>
+    <video
+      id="example_video_1"
+      class="video-js"
+      controls
+      preload="none"
+      width="640"
+      height="360"
+      data-setup='{ "html5" : { "nativeTextTracks" : false } }'
+      poster="http://d2zihajmogu5jn.cloudfront.net/elephantsdream/poster.png"
+    >
+      <!-- <source
+        src="http://d2zihajmogu5jn.cloudfront.net/elephantsdream/ed_hd.mp4"
+        type="video/mp4"
+      />
+      <source
+        src="http://d2zihajmogu5jn.cloudfront.net/elephantsdream/ed_hd.ogg"
+        type="video/ogg"
+      /> -->
+
+      <p class="vjs-no-js">
+        To view this video please enable JavaScript, and consider upgrading to a
+        web browser that
+        <a href="http://videojs.com/html5-video-support/" target="_blank"
+          >supports HTML5 video</a
+        >
+      </p>
+    </video>
+
+    <script src="video.js"></script>
+  </body>
+
+  <script>
+    class VideoCrx {
+      constructor(id) {
+        this.id = id;
+      }
+      initVideo() {
+        var player = videojs(this.id);
+        player.src({
+          type: "video/mp4",
+          src: "http://d2zihajmogu5jn.cloudfront.net/elephantsdream/ed_hd.mp4"
+        });
+        this.setAddMarkerButton(player);
+        this.onReadyVideo(player, this);
+        this.captureEventMakersListButton(player, this);
+      }
+      onReadyVideo(player, self) {
+        player.ready(function() {
+          self.setMarkersListButton();
+          self.setMarkersList(player);
+        });
+      }
+      setAddMarkerButton(player) {
+        var Button = videojs.getComponent("Button");
+        var MyButton = videojs.extend(Button, {
+          constructor: function() {
+            Button.apply(this, arguments);
+            this.addClass("icon-bookmark");
+            this.controlText("Crear marcador");
+            this.setAttribute("id", "btnAgregarMarcador");
+          },
+          handleClick: function() {
+            /* do something on click */
+            alert("Crear marcador");
+          }
+        });
+        videojs.registerComponent("MyButton", MyButton);
+        player.getChild("controlBar").addChild("MyButton", {}, 9);
+      }
+      setMarkersListButton() {
+        var domButtonChapters = document.querySelector(
+          "button[title='Chapters']"
+        );
+        domButtonChapters.setAttribute("id", "btnMostrarMarcadores");
+        domButtonChapters.setAttribute("title", "Marcadores");
+      }
+      setMarkersList(player) {
+        player.nativeTextTracks = false;
+        var track = {
+          kind: "chapters",
+          src: "chapters.en.vtt",
+          srclang: "en",
+          label: "Marcadores",
+          default: "default"
+        };
+        player.addRemoteTextTrack(track, false);
+      }
+      captureEventMakersListButton(player, self) {
+        var ChaptersButton = player
+          .getChild("controlBar")
+          .getChild("ChaptersButton");
+        ChaptersButton.on("mouseover", function() {
+          self.alterMarkersList();
+        });
+        ChaptersButton.on("click", function() {
+          self.alterMarkersList();
+        });
+      }
+      alterMarkersList() {
+        var domListaMarcadores = document.querySelectorAll(
+          "span[class='vjs-menu-item-text']"
+        );
+        domListaMarcadores.forEach(function(item) {
+          var stringItem = item.textContent.toString();
+          try {
+            var jsonObject = JSON.parse(stringItem);
+            var domParentElement = item.parentElement;
+            domParentElement.classList.add("row");
+
+            var col = document.createElement("div");
+            col.classList.add("col");
+            col.innerHTML = `<i class="fa fa-circle" aria-hidden="true"></i>`;
+            domParentElement.insertBefore(col, item);
+
+            item.innerHTML = `${jsonObject.descripcion}`;
+
+            col = document.createElement("div");
+            col.classList.add("col");
+            col.innerHTML = `<a href="#" class="text-danger" style="font-size: 1.5em;"><i class="fa fa-trash" aria-hidden="true"></i></a>`;
+            domParentElement.appendChild(col);
+
+            item.classList.add("col");
+          } catch (error) {
+            // console.log(error);
+          }
+        });
+      }
+    }
+
+    myvideo = new VideoCrx("example_video_1");
+    myvideo.initVideo();
+  </script>
+</html>
